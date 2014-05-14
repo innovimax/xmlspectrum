@@ -56,23 +56,27 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 xmlns:xs="http://www.w3.org/2001/XMLSchema"
 xmlns:loc="com.qutoric.sketchpath.functions"
 xmlns:css="css-defs.com"
-exclude-result-prefixes="loc f xs css"
-xmlns=""
+xmlns:xqf="urn:xq.internal-function"
+exclude-result-prefixes="loc f xs css xqf"
+xpath-default-namespace="http://www.w3.org/1999/xhtml"
+xmlns="http://www.w3.org/1999/xhtml"
 xmlns:f="internal">
 
 <xsl:import href="xmlspectrum.xsl"/>
+<xsl:import href="xq-spectrum.xsl"/>
 <xsl:import href="make-toc.xsl"/>
 
 <xsl:output indent="no" method="html"/>
 <xsl:param name="sourcepath" as="xs:string" select="''"/>
 <!--  by default - rely on original indentation -->
-<xsl:param name="indent" as="xs:string" select="'2'"/>
+<xsl:param name="indent" as="xs:string" select="'-1'"/>
 
 <xsl:param name="color-theme" select="'dark'"/>
 <xsl:param name="css-path" select="''"/>
 <xsl:param name="auto-trim" select="'no'"/>
 <xsl:param name="link-names" select="'no'"/>
 <xsl:param name="output-path" select="'output/'"/>
+<xsl:param name="format-mixed-content" select="'no'"/>
 <!-- set value to 'scp' for source-code-pro font -->
 <xsl:param name="font-name" select="'scp'"/>
 <!-- set value to 'xml' or 'xhtml' for use in XProc step -->
@@ -97,7 +101,7 @@ select="'http://www.w3.org/TR/xpath-functions/'"/>
 <xsl:variable name="css-name" select="'theme.css'"/>
 <xsl:variable name="do-output-path"
 select="for $c in f:path-to-uri($output-path) return
-if (ends-with($c, '/'))
+if (ends-with($c, '/') or ends-with($c, '\'))
 then $c
 else concat($c, '/')
 "/>
@@ -120,7 +124,8 @@ else f:doctype-from-xmlns(*/namespace-uri())"/>
 <xsl:with-param name="is-xml" select="true()" as="xs:boolean"/>
 <xsl:with-param name="doctype" select="$doctype" as="xs:string"/>
 <xsl:with-param name="indent-size" select="$indent-size" as="xs:integer"/>
-<xsl:with-param name="root-prefix" select="if ($document-type-prefix ne '') then $document-type-prefix
+<xsl:with-param name="root-prefix" 
+select="if ($document-type-prefix ne '') then $document-type-prefix
 else $root-prefix"/>
 </xsl:call-template>
 </xsl:variable>
@@ -128,6 +133,10 @@ else $root-prefix"/>
 <xsl:message>
 <xsl:value-of select="'processing', count($all-spans), 'tokens for', base-uri(), 'css-inline:', $css-inline"/>
 </xsl:message>
+<xsl:message>------------------------------------------------</xsl:message>
+<xsl:message select="'auto-trim: ', $auto-trim, ' indent: ', $indent"/>
+<xsl:message select="'output-path: ', $output-path, ' doctype: ', $doctype, ' root-prefix: ', $root-prefix"/>
+
 
 <xsl:if test="$output-method eq 'html'">
 <xsl:text disable-output-escaping='yes'>&lt;!DOCTYPE html></xsl:text>
@@ -137,6 +146,10 @@ else $root-prefix"/>
 <title><xsl:value-of select="'XMLSpectrum output'"/></title>
 <xsl:if test="$css-inline eq 'no'">
 <style type="text/css"><xsl:sequence select="f:get-css()"/></style>
+</xsl:if>
+<xsl:if test="$font-name eq 'scp' and $css-inline eq 'yes'">
+<style>
+@import url(http://fonts.googleapis.com/css?family=Source+Code+Pro);</style>
 </xsl:if>
 </head>
 <body>
@@ -158,16 +171,23 @@ else $root-prefix"/>
 
 <xsl:template name="main">
 <xsl:param name="sourceuri" select="$sourcepath"/>
-
 <!-- if windows OS, convert path to URI -->
-<xsl:variable name="corrected-uri" select="replace($sourceuri,'\\','/')"/>
+<xsl:variable name="corrected-uri1" select="replace($sourceuri,'\\','/')"/>
+<xsl:variable name="uri-tokens" select="tokenize($corrected-uri1, '/')" as="xs:string*"/>
+<xsl:variable name="filename" select="$uri-tokens[last()]"/>
+<xsl:variable name="encoded-filename" select="encode-for-uri($filename)"/>
+<xsl:variable name="directory" select="substring($corrected-uri1, 1, string-length($corrected-uri1) - string-length($filename))"/>
+<xsl:variable name="corrected-uri" select="concat($directory, $encoded-filename)"/>
 
-<xsl:variable name="is-xml" select="doc-available($corrected-uri)" as="xs:boolean"/>
+
+<xsl:variable name="is-xml" as="xs:boolean"
+select="doc-available($corrected-uri) and not($document-type = ('xquery','xpath'))"/>
 
 <xsl:variable name="root-element" select="if ($is-xml) then doc($corrected-uri)/* else ()"/>
 <xsl:variable name="root-qname" select="if ($is-xml) then node-name($root-element) else ()" as="xs:QName?"/>
 
-<xsl:variable name="root-prefix" select="if ($document-type-prefix ne '') then
+<xsl:variable name="root-prefix" 
+select="if ($document-type-prefix ne '') then
 $document-type-prefix
 else if ($is-xml) 
 then ((prefix-from-QName($root-qname), '')[1]) 
@@ -182,6 +202,8 @@ f:doctype-from-xmlns($root-namespace)
 else ''"/>
 
 <xsl:variable name="is-xsl" as="xs:boolean" select="$doctype eq 'xslt'"/>
+<xsl:message select="'auto-trim: ', $auto-trim, ' indent: ', $indent"/>
+<xsl:message select="'output-path: ', $output-path, ' doctype: ', $doctype, ' root-prefix: ', $root-prefix"/>
 
 <xsl:choose>
 <xsl:when test="$is-xsl and $do-link">
@@ -211,7 +233,7 @@ select="f:get-all-files(resolve-uri($corrected-uri, static-base-uri()), () )"/>
 </xsl:for-each>
 </globals>
 </xsl:variable>
-
+<xsl:message>------------------------------------------------</xsl:message>
 <xsl:for-each select="$globals/file">
 
 <xsl:message><xsl:value-of select="'tokenizing', @path, '...'"/></xsl:message>
@@ -284,10 +306,25 @@ else uri"/>
 </xsl:call-template>
 </xsl:variable>
 
+<xsl:variable name="spans" as="element()*">
+<xsl:choose>
+<xsl:when test="$do-link">
+<xsl:call-template name="wrap-spans-only">
+<xsl:with-param name="spans" as="node()*" select="$result-spans"/>
+<xsl:with-param name="index" select="1" as="xs:integer"/>
+</xsl:call-template>
+</xsl:when>
+<xsl:otherwise>
+<xsl:sequence select="$result-spans"/>
+</xsl:otherwise>
+</xsl:choose>
+</xsl:variable>
+
+
 <xsl:variable name="file-only" select="f:file-from-uri($corrected-uri)"/>
 
 <xsl:call-template name="output-html-doc">
-<xsl:with-param name="result-spans" select="$result-spans"/>
+<xsl:with-param name="result-spans" select="$spans"/>
 <xsl:with-param name="filename" select="if ($file-only ne '') then $file-only
 else 'xms-output'"/>
 <xsl:with-param name="css-link"
@@ -355,7 +392,7 @@ concat(
 
 <xsl:variable name="span" select="$spans[$index]"/>
 
-<xsl:if test="$index mod 500 eq 0">
+<xsl:if test="$index mod 1500 eq 0">
 <xsl:message><xsl:value-of select="'token: ', $index"/></xsl:message>
 </xsl:if>
 
@@ -398,6 +435,56 @@ select="xs:integer(substring($span-children[last()]/@id, 3
 </xsl:otherwise>
 </xsl:choose>
 </xsl:template>
+
+<xsl:template name="wrap-spans-only">
+<xsl:param name="spans" as="node()*"/>
+<xsl:param name="index" as="xs:integer"/>
+
+<xsl:variable name="span" select="$spans[$index]"/>
+
+<xsl:if test="$index mod 1500 eq 0">
+<xsl:message><xsl:value-of select="'token: ', $index"/></xsl:message>
+</xsl:if>
+
+<xsl:choose>
+<xsl:when test="empty($span)"/>
+<xsl:when test="$span/@class eq 'es'">
+<xsl:variable name="span-children" as="node()*">
+<xsl:call-template name="wrap-spans-only">
+<xsl:with-param name="spans" select="$spans"/>
+<xsl:with-param name="index" select="$index + 1"/>
+</xsl:call-template>
+</xsl:variable>
+<span class="ww" id="w{$index}">
+<xsl:sequence select="$span"/>
+<xsl:sequence select="$span-children"/>
+</span>
+
+<xsl:variable name="prev-index"
+select="xs:integer(substring($span-children[last()]/@id, 3
+))"/>
+
+<xsl:call-template name="wrap-spans-only">
+<xsl:with-param name="spans" select="$spans"/>
+<xsl:with-param name="index" select="$prev-index + 1"/>
+</xsl:call-template>
+
+</xsl:when>
+<xsl:when test="$span/@class = ('sc', 'ec')">
+<span id="wx{$index}">
+<xsl:copy-of select="$span/@*|$span/node()"/>
+</span>
+</xsl:when>
+<xsl:otherwise>
+<xsl:sequence select="$span"/>
+<xsl:call-template name="wrap-spans-only">
+<xsl:with-param name="spans" select="$spans"/>
+<xsl:with-param name="index" select="$index + 1"/>
+</xsl:call-template>
+</xsl:otherwise>
+</xsl:choose>
+</xsl:template>
+
 
 <xsl:template name="get-common-root" as="xs:string*">
 <xsl:param name="all-files" as="xs:string*" tunnel="yes" />
@@ -442,17 +529,34 @@ else (f:min-common-item($common-path, $current-file))"/>
 <xsl:function name="f:get-all-files" as="xs:string*">
 <xsl:param name="new-uri" as="xs:string*"/>
 <xsl:param name="uri-list" as="xs:string*"/>
+<xsl:variable name="uri-parts" as="xs:string*" select="tokenize($new-uri[1],'/|\\')"/>
+<xsl:variable name="first-uri" as="xs:string*" 
+select="string-join(
+(subsequence($uri-parts, 1, count($uri-parts) - 1),'')
+,'/')
+"/>
+<xsl:sequence select="f:get-all-files($first-uri, $new-uri, $uri-list)"/>
+
+</xsl:function>
+
+<xsl:function name="f:get-all-files" as="xs:string*">
+<xsl:param name="first-uri" as="xs:string"/>
+<xsl:param name="new-uri" as="xs:string*"/>
+<xsl:param name="uri-list" as="xs:string*"/>
 
 <xsl:variable name="add-uri" as="xs:string*"
 select="for $file in $new-uri return
-if ($file = ($uri-list)) then () else $file"/>
+if ($file = ($uri-list)) then () else f:fix-uri($first-uri, $file)"/>
 
 <xsl:variable name="new-externals" as="xs:string*">
 <xsl:for-each select="$add-uri">
+<xsl:variable name="has-protocol" as="xs:boolean" select="contains(.,':')"/>
+<xsl:if test="($has-protocol and not(contains(.,'plugin:'))) or not($has-protocol)">
 <xsl:variable name="doc" select="doc(.)"/>
 <xsl:for-each select="$doc/*/xsl:import/@href|$doc/*/xsl:include/@href">
 <xsl:value-of select="resolve-uri(., base-uri($doc))"/>
 </xsl:for-each>
+</xsl:if>
 </xsl:for-each>
 </xsl:variable>
 
@@ -460,13 +564,21 @@ if ($file = ($uri-list)) then () else $file"/>
 
 <xsl:choose>
 <xsl:when test="exists($new-externals)">
-<xsl:sequence select="f:get-all-files($new-externals, $concat-sequence)"/>
+<xsl:sequence select="f:get-all-files($first-uri, $new-externals, $concat-sequence)"/>
 </xsl:when>
 <xsl:otherwise>
 <xsl:sequence select="$concat-sequence"/>
 </xsl:otherwise>
 </xsl:choose>
 
+</xsl:function>
+
+<xsl:function name="f:fix-uri" as="xs:string">
+<xsl:param name="first-uri" as="xs:string"/>
+<xsl:param name="uri"/>
+<xsl:sequence select="if(contains($uri, 'plugin:'))
+then concat($first-uri, substring-after($uri, '/'))
+else $uri"/>
 </xsl:function>
 
 <!--
@@ -493,8 +605,11 @@ sample globals elements:
 <xsl:apply-templates select="$doc/*/xsl:function" mode="globals"/>
 </functions>
 <variables>
-<xsl:apply-templates select="$doc/*/(xsl:variable|xsl:param)" mode="globals"/>
+<xsl:apply-templates select="$doc/*/(xsl:variable)" mode="globals"/>
 </variables>
+<params>
+<xsl:apply-templates select="$doc/*/(xsl:param)" mode="globals"/>
+</params>
 
 </xsl:function>
 
@@ -529,18 +644,23 @@ then $href-1
 else
 concat($href-1,'.', $output-method)"/>
 <xsl:message>writing: <xsl:value-of select="$href"/></xsl:message>
+<xsl:message>file: <xsl:value-of select="$filename"/></xsl:message>
 <xsl:result-document href="{$href}"
 method="{$output-method}" indent="no">
 
 <xsl:if test="$output-method eq 'html'">
 <xsl:text disable-output-escaping='yes'>&lt;!DOCTYPE html></xsl:text>
 </xsl:if>
-
+<xsl:message select="'output-method', $output-method"/>
 <html>
 <head>
 <title><xsl:value-of select="$file-only"/></title>
 <xsl:if test="$css-inline eq 'no'">
 <link rel="stylesheet" type="text/css" href="{$css-link}"/>
+</xsl:if>
+<xsl:if test="$font-name eq 'scp' and $css-inline eq 'yes'">
+<style>
+@import url(http://fonts.googleapis.com/css?family=Source+Code+Pro);</style>
 </xsl:if>
 </head>
 <body>
@@ -552,7 +672,10 @@ method="{$output-method}" indent="no">
 <!-- Call to imported functions returns sequence of span elements
      with class attribute values used to colorise with CSS
 -->
-<xsl:sequence select="$result-spans"/>
+<xsl:sequence select="if ($css-inline eq 'yes') then
+f:add-nbsp($result-spans)
+else $result-spans"/>
+
 </pre>
 </div>
 </body>
@@ -572,17 +695,24 @@ method="{$output-method}" indent="no">
 <xsl:param name="doctype" as="xs:string"/>
 <xsl:param name="indent-size" as="xs:integer"/>
 <xsl:param name="root-prefix" as="xs:string"/>
+<xsl:variable name="is-xml-new" as="xs:boolean" 
+select="if ($is-xml) then
+true()
+else
+if ($doctype = ('xpath', 'xquery', '')) then
+false()
+else true()"/>
 <xsl:variable name="fixed-uri" select="f:path-to-uri($input-uri)"/>
 <xsl:message><xsl:value-of select="'input-uri', $fixed-uri"/></xsl:message>
 <xsl:variable name="file-content" as="xs:string" select="unparsed-text($fixed-uri)"/>
 <xsl:variable name="pre-file-only" select="f:file-from-uri($input-uri)"/>
 <xsl:variable name="file-only" select="if ($pre-file-only ne '') then $pre-file-only else 'xms-output'"/>
 <xsl:choose>
-<xsl:when test="$is-xml and $indent-size lt 0 and not($do-trim)">
+<xsl:when test="$is-xml-new and $indent-size lt 0 and not($do-trim)">
 <!-- for case where XPath is embedded in XML text -->
 <xsl:sequence select="f:render($file-content, $doctype, $root-prefix)"/>
 </xsl:when>
-<xsl:when test="$is-xml">
+<xsl:when test="$is-xml-new">
 <!-- for case where XPath is embedded in XML text and indentation required -->
 <xsl:variable name="spans" select="f:render($file-content, $doctype, $root-prefix)"/>
 <xsl:variable name="real-indent" select="if ($indent-size lt 0) then 0 else $indent-size"
@@ -591,7 +721,9 @@ as="xs:integer"/>
 </xsl:when>
 <xsl:otherwise>
 <!-- for case where XPath is standalone -->
-<xsl:sequence select="loc:showXPath($file-content)"/>
+<!--        <xsl:sequence select="loc:showXPath($file-content)"/>-->
+<xsl:variable name="xptokens" as="element()*" select="xqf:show-xquery($file-content)"/>
+<xsl:sequence select="if ($css-inline ne 'no') then f:style-spans($xptokens) else $xptokens"/>
 </xsl:otherwise>
 </xsl:choose>
 </xsl:template>

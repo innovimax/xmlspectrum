@@ -3,7 +3,8 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 xmlns:xs="http://www.w3.org/2001/XMLSchema"
 xmlns:loc="com.qutoric.sketchpath.functions"
 exclude-result-prefixes="loc f xs"
-xmlns=""
+xpath-default-namespace="http://www.w3.org/1999/xhtml"
+xmlns="http://www.w3.org/1999/xhtml"
 xmlns:f="internal">
 
 <!-- Creates a table of contents derived from globals result-tree -->
@@ -98,6 +99,18 @@ xmlns:f="internal">
 </ul>
 </li>
 </xsl:if>
+<xsl:if test="exists(params/item)">
+<li>
+<span class="vname">Parameters</span>
+<ul>
+<xsl:apply-templates select="params/item" mode="toc">
+<xsl:sort select="f:resolve-clark-name(.)"/>
+<xsl:with-param name="path" select="@path"/>
+</xsl:apply-templates>
+</ul>
+</li>
+</xsl:if>
+
 <xsl:if test="not(exists(*/item))">
 <li><span>[None]</span></li>
 </xsl:if>
