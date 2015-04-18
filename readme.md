@@ -116,6 +116,18 @@ Recursively processes all XSLT modules from a top-level stylesheet in a multi-fi
 
 ##XMLSpectrum in use
 
+###Command Line
+
+Sample bash and doc scripts are included as a convenience in the shell-cmd directory. These scripts invoke the Saxon XSLT processor with the highlight-file.xsl stylesheet and perform basic file path resolving and checking on the input file (supplied as the first argument when calling the script) for the current directory - not the script or directory. 
+
+| script    |  description                                                |
+| ----------| ----------------------------------------------------------- |
+| xmlspec   |  syntax highlighting of XSLT/XML or XQuery                  |
+| xslprint  | syntax highlighting and TOC for multi-module XSLT project   |
+| xmlformat | reformatting of source for XSLT/XML                         |
+
+###GUI
+
 _XMLSpectrum-FX_  - A simple Java app included in this repository (latest build at gui-project/xmlspectrum-fx-dist.zip).
 This provides a front-end useful for showcasing the XSLT, clipboard and drag and drop functionality make
 it useful in its own right for highlighting code snippets for blogging etc. Tested by pasting clipboard contents
@@ -130,7 +142,7 @@ attribute.)
 
 [demo output of DITA XSLT Project](http://qutoric.com/samples/dita-ot-175/)
 
-[XMLSpectrum (highlight-file.xsl entry-file) run on itself](http://qutoric.com/samples/xmlspectrum-code/)
+[XMLSpectrum Project - run on itself](http://qutoric.com/xmlspectrum/release-toc/)
 
 [Transformed web page with embedded code samples](http://qutoric.com/samples/inline/highlighted-inline.html)
 
@@ -158,7 +170,6 @@ The *xmlspectrum.xsl* and *xq-spectrum.xsl* stylesheets are intended for use by 
 
 For usage instructions, see [xmlspectrum/app/xsl/readme](https://github.com/pgfearo/xmlspectrum/blob/master/app/xsl/readme.md)
 
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/pgfearo/xmlspectrum/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
 
 

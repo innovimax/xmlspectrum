@@ -46,6 +46,22 @@ xmlns:css="css-defs.com">
 <c:color name="cyan" value="2aa198"/>
 <c:color name="green" value="859900"/>
 </c:theme>
+<c:theme name="dawn-light">
+<c:color name="base" value="ececec"/>
+<c:color name="base01" value="bab0ca"/>
+<c:color name="base03" value="ffffff"/>
+<c:color name="base0" value="839496"/>
+<c:color name="base1" value="93a1a1"/>
+
+<c:color name="yellow" value="403090"/>
+<c:color name="orange" value="00a0d0;"/>
+<c:color name="red" value="dc322f"/>
+<c:color name="magenta" value="d33682"/>
+<c:color name="violet" value="6c71c4"/>
+<c:color name="blue" value="268bd2"/>
+<c:color name="cyan" value="2aa198"/>
+<c:color name="green" value="cdcdcd"/>
+</c:theme>
 <c:theme name="roboticket-grey">
 <c:color name="base" value="bdd8f2"/>
 <c:color name="base01" value="afbfcf"/>
@@ -93,6 +109,22 @@ xmlns:css="css-defs.com">
 <c:color name="blue" value="81a2be"/>
 <c:color name="cyan" value="8abeb7"/>
 <c:color name="green" value="b5bd68"/>
+</c:theme>
+<c:theme name="tomorrow-day">
+<c:color name="base" value="282a2e"/>
+<c:color name="base01" value="aabada"/>
+<c:color name="base03" value="edefff"/>
+<c:color name="base0" value="c5c8c6"/>
+<c:color name="base1" value="969896"/>
+
+<c:color name="yellow" value="0000c0"/>
+<c:color name="orange" value="de935f"/>
+<c:color name="red" value="ce94da"/>
+<c:color name="violet" value="ad95af"/>
+<c:color name="magenta" value="cc6666"/>
+<c:color name="blue" value="81a2be"/>
+<c:color name="cyan" value="8abeb7"/>
+<c:color name="green" value="919191"/>
 </c:theme>
 <c:theme name="xms">
 <c:color name="base" value="f0f0f0"/>
@@ -175,32 +207,35 @@ base03 ww:not(:hover) txt:not(:hover) cm:not(:hover) pi:not(:hover)
 <!-- xpath literal text -->
 <c:color name="base1">base1 literal</c:color>
 <!-- xpath operators -->
-<c:color name="yellow">yellow op type-op if higher step whitespace quantifier
+<c:color name="yellow">yellow op type-op if higher step whitespace quantifier parenthesis
 </c:color>
 <!-- functions -->
 <c:color name="orange">orange function pname
 </c:color>
 <!-- declared fn and template names -->
-<c:color name="red">red fname tname
+<c:color name="red">red fname tname tcall
 </c:color>
 <!-- variable names -->
 <c:color name="magenta">magenta vname variable external
 </c:color>
 <!-- qnames -->
-<c:color name="violet">violet qname type-name unclosed en cl href tcall
+<c:color name="violet">violet qname type-name unclosed en cl href
 </c:color>
 <!-- parenthesis and highlighted element names -->
-<c:color name="blue">blue enxsl clxsl enx filter parenthesis node
+<c:color name="blue">blue enxsl clxsl enx filter node node-type
 </c:color>
 <!-- attribute names + axis -->
-<c:color name="cyan">cyan atn numeric pi dt axis context bracedq
+<c:color name="cyan">cyan atn numeric pi dt axis context bracedq property
 </c:color>
 <!-- xml and xpath comments -->
-<c:color name="green">green cm comment av type node-type
+<c:color name="green">green cm comment av type
 </c:color>
 </c:color-map>
 <css:boiler-plate>
 <css:font scp="@import url(http://fonts.googleapis.com/css?family=Source+Code+Pro);"/>
+body {
+    margin:0;
+}
 p.spectrum, pre.spectrum {
 <css:main>
     margin:0px;
@@ -211,7 +246,7 @@ p.spectrum, pre.spectrum {
     border: none thin;
     border-color: #405075;
     background-color:<css:color name="base03"/>;
-    padding: 2px;
+    padding: 2px 2px 2px 5px;
     margin-bottom:5px;
 </css:main>
 }
@@ -230,13 +265,36 @@ div.spectrum-toc {
 
 ul.base1, ul.spectrum-toc {
 color:<css:color name="base1"/>;
-}
+  }
 
-.spectrum span {
-    white-space: pre-wrap;
-}
+  ul.spectrum-toc > li {
+  border-width:1px;
+  border-top-style: solid;
+  padding-bottom: 8px;
+  }
+  ul.spectrum-toc li {
+  list-style: none;
+  }
+  ul.spectrum-toc span.blue {
+  display:block;
+  margin: 8px 0px 8px 0px;
+  }
+  ul.t-and-f {
 
-<css:map element="span"/>
+  border-color: blue;
+  float: left;
+  }
+  ul.v-and-p {
+
+  border-color: red;
+  float: left;
+  }
+
+  .spectrum span {
+  white-space: pre-wrap;
+  }
+
+  <css:map element="span"/>
 
 a.solar {
     text-decoration:none;
